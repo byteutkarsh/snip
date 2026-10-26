@@ -794,6 +794,13 @@ function LinkCard({ link, onDelete, onEdit, onVisit, onQR, onAnalytics }) {
 function App() {
   const { links, addLink, updateLink, deleteLink, recordClick, importLinks } = useLinks();
 
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('snip_theme') === 'dark' ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
   const [url, setUrl] = useState('');
   const [alias, setAlias] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -811,6 +818,18 @@ function App() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const minDate = tomorrow.toISOString().split('T')[0];
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      'content', theme === 'dark' ? '#171a20' : '#f6f7f9'
+    );
+    try {
+      localStorage.setItem('snip_theme', theme);
+    } catch {
+      // Keep the selected theme for this session if storage is unavailable.
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (!status) return undefined;
@@ -927,7 +946,18 @@ function App() {
         </div>
 
         <div className="hero-panel">
-          <div className="panel-label">Workspace status</div>
+          <div className="panel-top">
+            <div className="panel-label">Workspace status</div>
+            <button
+              className="theme-toggle"
+              type="button"
+              onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            </button>
+          </div>
           <div className="panel-metric">{pluralize(links.length, 'link')}</div>
           <div className="panel-copy">
             {topLink ? `Top alias: ${BASE}${topLink.code}` : 'Ready for your first short link.'}
